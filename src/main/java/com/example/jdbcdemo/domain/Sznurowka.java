@@ -11,6 +11,8 @@ public class Sznurowka {
 	private String kolor;
 	
 	private int grubosc;
+	
+	private Sklep sklep;
 
 	public Long getId() {
 		return id;
@@ -51,5 +53,13 @@ public class Sznurowka {
 	public void setGrubosc(int grubosc) {
 		this.grubosc = grubosc;
 	}
-	
+
+	public Sklep getSklep() {
+		return sklep;
+	}
+
+	public void setSklep(Sklep sklep) {
+		this.sklep = sklep;
+	}
+
 }
