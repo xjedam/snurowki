@@ -3,6 +3,7 @@ package com.example.jdbcdemo.service;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.After;
@@ -155,5 +156,59 @@ public class SznurowkaManagerTest {
 		Sznurowka s1db = sm.getSznurowka(s1.getId());
 		assertEquals(null, s1db);
 	}
+	
+	@Test
+	public void kupISprzedajSznurowkiTest() {
+		Sznurowka s1 = new Sznurowka(PRODUCENT1, DLUGOSC1, KOLOR1, GRUBOSC1);
+		Sznurowka s2 = new Sznurowka(PRODUCENT2, DLUGOSC2, KOLOR2, GRUBOSC2);
+		Sznurowka s3 = new Sznurowka(PRODUCENT3, DLUGOSC3, KOLOR3, GRUBOSC2);
+		Sznurowka s4 = new Sznurowka(PRODUCENT1, DLUGOSC2, KOLOR3, GRUBOSC1);
+		
+		assertEquals(1,sm.addSznurowka(s1));
+		assertEquals(1,sm.addSznurowka(s2));
+		assertEquals(1,sm.addSznurowka(s3));
+		assertEquals(1,sm.addSznurowka(s4));
+		
+		Sklep sk1 = new Sklep(SKLEP_NAZWA1);
+		Sklep sk2 = new Sklep(SKLEP_NAZWA2);
+
+		assertEquals(1, sm.addSklep(sk1));
+		assertEquals(1, sm.addSklep(sk2));
+		
+		sm.commitChanges();
+		
+		assertEquals(1, sm.kupSznurowke(s1, sk1.getId()));
+		assertEquals(1, sm.kupSznurowke(s2, sk1.getId()));
+		assertEquals(1, sm.kupSznurowke(s3, sk2.getId()));
+		assertEquals(1, sm.kupSznurowke(s4, sk2.getId()));
+		
+		sm.commitChanges();
+		
+		Sznurowka s1db = sm.getSznurowka(s1.getId());
+		Sznurowka s2db = sm.getSznurowka(s2.getId());
+		Sznurowka s3db = sm.getSznurowka(s3.getId());
+		Sznurowka s4db = sm.getSznurowka(s4.getId());
+		
+		assertEquals(sk1.getId(), s1db.getSklep().getId());
+		assertEquals(sk1.getNazwa(), s1db.getSklep().getNazwa());
+		assertEquals(sk1.getId(), s2db.getSklep().getId());
+		assertEquals(sk1.getNazwa(), s2db.getSklep().getNazwa());
+		assertEquals(sk2.getId(), s3db.getSklep().getId());
+		assertEquals(sk2.getNazwa(), s3db.getSklep().getNazwa());
+		assertEquals(sk2.getId(), s4db.getSklep().getId());
+		assertEquals(sk2.getNazwa(), s4db.getSklep().getNazwa());
+		
+		assertEquals(1, sm.sprzedajSznurowke(s1.getId()));
+		assertEquals(1, sm.sprzedajSznurowke(s3.getId()));
+		
+		sm.commitChanges();
+		
+		s1db = sm.getSznurowka(s1.getId());
+		s3db = sm.getSznurowka(s3.getId());
+
+		assertEquals(null, s1db.getSklep());
+		assertEquals(null, s3db.getSklep());
+	}
+	
 	
 }

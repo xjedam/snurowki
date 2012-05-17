@@ -33,7 +33,7 @@ public class SznurowkaManager {
 	private PreparedStatement deleteSznurowkaStatement;
 	private PreparedStatement getAllSznurowkasStatement;
 	private PreparedStatement getSznurowkaStatement;
-	private PreparedStatement kupSznurowkiStatement;
+	private PreparedStatement kupSznurowkeStatement;
 	private PreparedStatement sprzedajSznurowkeStatement;	
 	
 	public SznurowkaManager() {
@@ -85,8 +85,8 @@ public class SznurowkaManager {
 			getSznurowkaStatement = connection.prepareStatement("Select s.id, s.producent, s.dlugosc," +
 					"s.kolor, s.grubosc, s.sklep_id, sk.nazwa from " +
 					"Sznurowka s LEFT JOIN Sklep sk on s.sklep_id = sk.id where s.id = ?");
-			kupSznurowkiStatement = connection.prepareStatement("UPDATE Sznurowka SET sklep_id = ? " +
-					"WHERE id in (?)");
+			kupSznurowkeStatement = connection.prepareStatement("UPDATE Sznurowka SET sklep_id = ? " +
+					"WHERE id = ?");
 			sprzedajSznurowkeStatement = connection.prepareStatement("UPDATE Sznurowka SET sklep_id = null " +
 					"WHERE id = ?");
 
@@ -219,17 +219,12 @@ public class SznurowkaManager {
 		return count;
 	}
 	
-	public int kupSznurowki(List<Sznurowka> sznurowki, Long idSklepu) {
+	public int kupSznurowke(Sznurowka s, Long idSklepu) {
 		int count = 0;
-		ArrayList idList = new ArrayList<Long>();
-		int i = 0;
-		for(Sznurowka s: sznurowki) {
-			idList.add(s.getId());
-		}
 		try {
-			kupSznurowkiStatement.setLong(1, idSklepu);
-			kupSznurowkiStatement.setArray(2, (Array)idList);
-			count = kupSznurowkiStatement.executeUpdate();
+			kupSznurowkeStatement.setLong(1, idSklepu);
+			kupSznurowkeStatement.setLong(2, s.getId());
+			count = kupSznurowkeStatement.executeUpdate();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
