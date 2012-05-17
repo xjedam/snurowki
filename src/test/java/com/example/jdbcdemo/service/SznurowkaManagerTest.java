@@ -3,6 +3,8 @@ package com.example.jdbcdemo.service;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import java.util.List;
+
 import org.junit.After;
 import org.junit.Test;
 
@@ -98,6 +100,60 @@ public class SznurowkaManagerTest {
 		assertEquals(s1.getDlugosc(), s1db.getDlugosc());
 		assertEquals(s1.getKolor(), s1db.getKolor());
 		assertEquals(s1.getGrubosc(), s1db.getGrubosc());
+	}
+	
+	@Test
+	public void batchGetTest() {
+		Sznurowka s1 = new Sznurowka(PRODUCENT1, DLUGOSC1, KOLOR1, GRUBOSC1);
+		Sznurowka s2 = new Sznurowka(PRODUCENT2, DLUGOSC2, KOLOR2, GRUBOSC2);
+		Sznurowka s3 = new Sznurowka(PRODUCENT3, DLUGOSC3, KOLOR3, GRUBOSC2);
+		
+		assertEquals(1,sm.addSznurowka(s1));
+		assertEquals(1,sm.addSznurowka(s2));
+		assertEquals(1,sm.addSznurowka(s3));
+		
+		sm.commitChanges();
+		
+		List<Sznurowka> lista = sm.getAllSznurowki();
+		assertNotNull(lista);
+		
+		int newOnes = 0;
+		for(Sznurowka s: lista) {
+			if(s.getId().equals(s1.getId())) {
+				newOnes++; 
+				assertEquals(s1.getProducent(), s.getProducent());
+				assertEquals(s1.getDlugosc(), s.getDlugosc());
+				assertEquals(s1.getKolor(), s.getKolor());
+				assertEquals(s1.getGrubosc(), s.getGrubosc());
+			}
+			if(s.getId().equals(s2.getId())) {
+				newOnes++; 
+				assertEquals(s2.getProducent(), s.getProducent());
+				assertEquals(s2.getDlugosc(), s.getDlugosc());
+				assertEquals(s2.getKolor(), s.getKolor());
+				assertEquals(s2.getGrubosc(), s.getGrubosc());
+			}
+			if(s.getId().equals(s3.getId())) {
+				newOnes++; 
+				assertEquals(s3.getProducent(), s.getProducent());
+				assertEquals(s3.getDlugosc(), s.getDlugosc());
+				assertEquals(s3.getKolor(), s.getKolor());
+				assertEquals(s3.getGrubosc(), s.getGrubosc());
+			}
+		}
+		assertEquals(3, newOnes);
+	}
+	
+	@Test
+	public void deleteTest() {
+		Sznurowka s1 = new Sznurowka(PRODUCENT1, DLUGOSC1, KOLOR1, GRUBOSC1);
+		assertEquals(1,sm.addSznurowka(s1));
+		sm.commitChanges();
+		
+		assertEquals(1, sm.deleteSznurowka(s1.getId()));
+		sm.commitChanges();
+		Sznurowka s1db = sm.getSznurowka(s1.getId());
+		assertEquals(null, s1db);
 	}
 	
 }

@@ -163,21 +163,23 @@ public class SznurowkaManager {
 	}
 	
 	public Sznurowka getSznurowka(Long id) {
-		Sznurowka s = new Sznurowka();
+		Sznurowka s = null;
 		Sklep sk = new Sklep();
 		try {
 			getSznurowkaStatement.setLong(1, id);
 			ResultSet rs = getSznurowkaStatement.executeQuery();
-			rs.next();
-			s.setId(rs.getLong("id"));
-			s.setProducent(rs.getString("producent"));
-			s.setDlugosc(rs.getInt("dlugosc"));
-			s.setKolor(rs.getString("kolor"));
-			s.setGrubosc(rs.getInt("grubosc"));
-			if(rs.getLong("sklep_id") != 0) {
-				sk.setId(rs.getLong("sklep_id"));
-				sk.setNazwa(rs.getString("nazwa"));
-				s.setSklep(sk);
+			if(rs.next()) {
+				s = new Sznurowka();
+				s.setId(rs.getLong("id"));
+				s.setProducent(rs.getString("producent"));
+				s.setDlugosc(rs.getInt("dlugosc"));
+				s.setKolor(rs.getString("kolor"));
+				s.setGrubosc(rs.getInt("grubosc"));
+				if(rs.getLong("sklep_id") != 0) {
+					sk.setId(rs.getLong("sklep_id"));
+					sk.setNazwa(rs.getString("nazwa"));
+					s.setSklep(sk);
+				}
 			}
 	
 		} catch (SQLException e) {
