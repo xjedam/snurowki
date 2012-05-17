@@ -6,6 +6,14 @@ public class Sklep {
 	
 	private String nazwa;
 
+	public Sklep(String nazwa) {
+		this.nazwa = nazwa;
+	}
+	
+	public Sklep() {
+		
+	}
+	
 	public Long getId() {
 		return id;
 	}

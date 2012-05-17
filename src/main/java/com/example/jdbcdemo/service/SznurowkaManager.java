@@ -10,6 +10,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.example.jdbcdemo.domain.Sklep;
 import com.example.jdbcdemo.domain.Sznurowka;
 
 public class SznurowkaManager {
@@ -27,6 +28,7 @@ public class SznurowkaManager {
 	private Statement statement;
 	
 	private PreparedStatement addSznurowkaStatement;
+	private PreparedStatement addSklepStatement;
 	private PreparedStatement updateSznurowkaStatement;
 	private PreparedStatement deleteSznurowkaStatement;
 	private PreparedStatement getAllSznurowkasStatement;
@@ -53,6 +55,7 @@ public class SznurowkaManager {
 				statement.executeUpdate(createTableSznurowka);
 
 			//Tabela sklep
+			rs = connection.getMetaData().getTables(null, null, null, null);
 			tableExists = false;
 			while (rs.next()) {
 				if ("Sklep".equalsIgnoreCase(rs.getString("TABLE_NAME"))) {
@@ -63,20 +66,25 @@ public class SznurowkaManager {
 
 			if (!tableExists)
 				statement.executeUpdate(createTableSklep);
-
+			
+			connection.setAutoCommit(false);
+			
 			addSznurowkaStatement = connection
 					.prepareStatement("INSERT INTO Sznurowka (producent, dlugosc," +
-							" kolor, grubosc) VALUES (?, ?, ?, ?)");
+							" kolor, grubosc) VALUES (?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
+			addSklepStatement = connection
+					.prepareStatement("INSERT INTO Sklep (nazwa) VALUES (?)", Statement.RETURN_GENERATED_KEYS);
 			deleteSznurowkaStatement = connection
 					.prepareStatement("DELETE FROM Sznurowka where id = ?");
 			getAllSznurowkasStatement = connection
-					.prepareStatement("SELECT s FROM Sznurowka s");
+					.prepareStatement("SELECT id, producent, dlugosc, kolor, grubosc FROM Sznurowka");
 			updateSznurowkaStatement = connection
 					.prepareStatement("UPDATE Sznurowka SET producent = ? , " +
 							"dlugosc = ? , kolor = ? , grubosc = ? " +
 							"WHERE id = ?");
-			getSznurowkaStatement = connection.prepareStatement("Select s from " +
-					"Sznurowka s where s.id =?");
+			getSznurowkaStatement = connection.prepareStatement("Select s.id, s.producent, s.dlugosc," +
+					"s.kolor, s.grubosc, s.sklep_id, sk.nazwa from " +
+					"Sznurowka s LEFT JOIN Sklep sk on s.sklep_id = sk.id where s.id = ?");
 			kupSznurowkiStatement = connection.prepareStatement("UPDATE Sznurowka SET sklep_id = ? " +
 					"WHERE id in (?)");
 			sprzedajSznurowkeStatement = connection.prepareStatement("UPDATE Sznurowka SET sklep_id = null " +
@@ -100,6 +108,31 @@ public class SznurowkaManager {
 			addSznurowkaStatement.setInt(4, s.getGrubosc());
 
 			count = addSznurowkaStatement.executeUpdate();
+			
+			ResultSet generatedKeys = addSznurowkaStatement.getGeneratedKeys();
+			if(generatedKeys.next()) {
+				s.setId(generatedKeys.getLong(1));
+			}
+			else {
+				System.out.println("Blad pobierania id");
+			}
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return count;
+	}
+	
+	public int addSklep(Sklep s) {
+		int count = 0;
+		try {
+			addSklepStatement.setString(1, s.getNazwa());
+			count = addSklepStatement.executeUpdate();
+			
+			ResultSet generatedKeys = addSklepStatement.getGeneratedKeys();
+			if(generatedKeys.next()) {
+				s.setId(generatedKeys.getLong(1));
+			}
 
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -131,16 +164,21 @@ public class SznurowkaManager {
 	
 	public Sznurowka getSznurowka(Long id) {
 		Sznurowka s = new Sznurowka();
+		Sklep sk = new Sklep();
 		try {
 			getSznurowkaStatement.setLong(1, id);
 			ResultSet rs = getSznurowkaStatement.executeQuery();
-	
+			rs.next();
 			s.setId(rs.getLong("id"));
 			s.setProducent(rs.getString("producent"));
 			s.setDlugosc(rs.getInt("dlugosc"));
 			s.setKolor(rs.getString("kolor"));
 			s.setGrubosc(rs.getInt("grubosc"));
-
+			if(rs.getLong("sklep_id") != 0) {
+				sk.setId(rs.getLong("sklep_id"));
+				sk.setNazwa(rs.getString("nazwa"));
+				s.setSklep(sk);
+			}
 	
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -148,34 +186,39 @@ public class SznurowkaManager {
 		return s;
 	}
 	
-	public void deleteSznurowka(Long id) {
+	public int deleteSznurowka(Long id) {
+		int count = 0;
 		try {
 			deleteSznurowkaStatement.setLong(1, id);
 
-			deleteSznurowkaStatement.executeUpdate();
+			count = deleteSznurowkaStatement.executeUpdate();
 
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+		return count;
 	}
 	
-	public void updateSznurowka(Sznurowka s) {
+	public int updateSznurowka(Sznurowka s) {
+		int count = 0;
 		try {
 			updateSznurowkaStatement.setString(1, s.getProducent());
 			updateSznurowkaStatement.setInt(2, s.getDlugosc());
 			updateSznurowkaStatement.setString(3, s.getKolor());
 			updateSznurowkaStatement.setInt(4, s.getGrubosc());
 			
-			updateSznurowkaStatement.setLong(1, s.getId());
+			updateSznurowkaStatement.setLong(5, s.getId());
 
-			deleteSznurowkaStatement.executeUpdate();
+			count = updateSznurowkaStatement.executeUpdate();
 
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+		return count;
 	}
 	
-	public void kupSznurowki(List<Sznurowka> sznurowki, Long idSklepu) {
+	public int kupSznurowki(List<Sznurowka> sznurowki, Long idSklepu) {
+		int count = 0;
 		ArrayList idList = new ArrayList<Long>();
 		int i = 0;
 		for(Sznurowka s: sznurowki) {
@@ -184,14 +227,30 @@ public class SznurowkaManager {
 		try {
 			kupSznurowkiStatement.setLong(1, idSklepu);
 			kupSznurowkiStatement.setArray(2, (Array)idList);
+			count = kupSznurowkiStatement.executeUpdate();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		
+		return count;
 	}
 	
-	public void sprzedajSznurowke(Long id) {
-		
+	public int sprzedajSznurowke(Long id) {
+		int count = 0;
+		try {
+			sprzedajSznurowkeStatement.setLong(1, id);
+			count = sprzedajSznurowkeStatement.executeUpdate();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return count;
+	}
+	
+	public void commitChanges() {
+		try {
+			connection.commit();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
 
 }

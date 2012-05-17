@@ -2,7 +2,7 @@ package com.example.jdbcdemo.domain;
 
 public class Sznurowka {
 	
-	private Long id;
+	private Long id = null;
 	
 	private String producent;
 	
@@ -12,7 +12,19 @@ public class Sznurowka {
 	
 	private int grubosc;
 	
-	private Sklep sklep;
+	private Sklep sklep = null;
+	
+	public Sznurowka(String producent, int dlugosc, String kolor, int grubosc) {
+		super();
+		this.producent = producent;
+		this.dlugosc = dlugosc;
+		this.kolor = kolor;
+		this.grubosc = grubosc;
+	}
+	
+	public Sznurowka() {
+		
+	}
 
 	public Long getId() {
 		return id;
