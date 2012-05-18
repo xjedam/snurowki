@@ -67,7 +67,7 @@ public class SznurowkaManager {
 			if (!tableExists)
 				statement.executeUpdate(createTableSklep);
 			
-			connection.setAutoCommit(false);
+			connection.setAutoCommit(true);
 			
 			addSznurowkaStatement = connection
 					.prepareStatement("INSERT INTO Sznurowka (producent, dlugosc," +
@@ -225,6 +225,23 @@ public class SznurowkaManager {
 			kupSznurowkeStatement.setLong(1, idSklepu);
 			kupSznurowkeStatement.setLong(2, s.getId());
 			count = kupSznurowkeStatement.executeUpdate();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return count;
+	}
+	
+	public int kupSznurowki(List<Sznurowka> lista, Long idSklepu) {
+		int count = 0;
+		try {
+			connection.setAutoCommit(false);
+			for(Sznurowka s: lista) {
+				kupSznurowkeStatement.setLong(1, idSklepu);
+				kupSznurowkeStatement.setLong(2, s.getId());
+				count += kupSznurowkeStatement.executeUpdate();
+			}
+			connection.commit();
+			connection.setAutoCommit(true);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
